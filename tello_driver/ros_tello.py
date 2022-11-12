@@ -87,11 +87,11 @@ def main():
     def videoRecorder():
         # create a VideoWrite object, recoring to ./video.avi
         height, width, _ = frame_read.frame.shape
-        fps = 1.0/60
+        fps = 1.0/30
         seq = 1
 
         print("Start recording")
-        video = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'MJPG'), 30, (width, height))
+        # video = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'MJPG'), 30, (width, height))
 
         while keepRecording.is_set():
             img_msg = bridge.cv2_to_imgmsg(frame_read.frame, encoding='bgr8')
@@ -101,12 +101,12 @@ def main():
             img_msg.header.frame_id = "cam0"
             pub_img.publish(img_msg)
             seq += 1
-            video.write(frame_read.frame)
+            # video.write(frame_read.frame)
             time.sleep(fps)
 
         print("Stop recording")
 
-        video.release()
+        # video.release()
 
     def imuReceiver():
         seq = 10001
@@ -117,17 +117,21 @@ def main():
         Rx = 0
         Ry = 0
         Rz = 0
+        wait = 0
 
         while keepRecording.is_set():
             imu_msg = _Imu.Imu()
 
-            if seq % 18 == 0:
+            if wait > 20 or tello.get_roll() != lastRoll or tello.get_pitch() != lastPitch or tello.get_yaw() != lastYaw:
                 Rx = (tello.get_roll() - lastRoll)*math.pi/18 # rad = degree*pi/180 (18 because 10hz values)
                 Ry = (tello.get_pitch() - lastPitch)*math.pi/18
                 Rz = (tello.get_yaw() - lastYaw)*math.pi/18
                 lastRoll = tello.get_roll()
                 lastYaw = tello.get_yaw()
                 lastPitch = tello.get_pitch()
+                wait = 0
+
+            wait += 1
 
             imu_msg.header.seq = seq
             imu_msg.header.stamp.set(math.floor(time.time()), time.time_ns() % 1000000000)
@@ -233,7 +237,7 @@ def main():
 
 
 
-    tello.takeoff()
+    # tello.takeoff()
     cv2.imwrite("picture.png", frame_read.frame)
 
     time.sleep(3)
