@@ -117,18 +117,33 @@ def main():
         Rx = 0
         Ry = 0
         Rz = 0
+        lastVX = 0
+        lastVY = 0
+        lastVZ = 0
+        Ax = 0
+        Ay = 0
+        Az = 0
+        
         wait = 0
 
         while keepRecording.is_set():
             imu_msg = _Imu.Imu()
 
-            if wait > 20 or tello.get_roll() != lastRoll or tello.get_pitch() != lastPitch or tello.get_yaw() != lastYaw:
+            if wait > 20 or tello.get_roll() != lastRoll or tello.get_pitch() != lastPitch or tello.get_yaw() != lastYaw or tello.get_speed_x() != lastVX or tello.get_speed_y() != lastVY or tello.get_speed_z() != lastVZ:
                 Rx = (tello.get_roll() - lastRoll)*math.pi/18 # rad = degree*pi/180 (18 because 10hz values)
                 Ry = (tello.get_pitch() - lastPitch)*math.pi/18
                 Rz = (tello.get_yaw() - lastYaw)*math.pi/18
                 lastRoll = tello.get_roll()
                 lastYaw = tello.get_yaw()
                 lastPitch = tello.get_pitch()
+
+                Ax = (tello.get_speed_x() - lastVX)/10
+                Ay = (tello.get_speed_y() - lastVY)/10
+                Az = (tello.get_speed_z() - lastVZ)/10
+                lastVX = tello.get_speed_x()
+                lastVY = tello.get_speed_y()
+                lastVZ = tello.get_speed_z()
+                print("Ax: {}, Ay: {}, Az: {}, Vx: {}, Vy: {}, Vz: {}, Rx: {}, Ry: {}, Rz: {}".format(Ax, Ay, Az, tello.get_speed_x(), tello.get_speed_y(), tello.get_speed_z(), Rx, Ry, Rz))
                 wait = 0
 
             wait += 1
@@ -141,9 +156,12 @@ def main():
             imu_msg.orientation_covariance[4] = 99999.9
             imu_msg.orientation_covariance[8] = 99999.9
 
-            imu_msg.linear_acceleration.x = tello.get_acceleration_x()/100
-            imu_msg.linear_acceleration.y = tello.get_acceleration_y()/100
-            imu_msg.linear_acceleration.z = tello.get_acceleration_z()/100
+            # imu_msg.linear_acceleration.x = tello.get_acceleration_x()/100
+            # imu_msg.linear_acceleration.y = tello.get_acceleration_y()/100
+            # imu_msg.linear_acceleration.z = tello.get_acceleration_z()/100
+            imu_msg.linear_acceleration.x = Ax
+            imu_msg.linear_acceleration.y = Ay
+            imu_msg.linear_acceleration.z = Az
             imu_msg.angular_velocity.x = Rx
             imu_msg.angular_velocity.y = Ry
             imu_msg.angular_velocity.z = Rz
@@ -237,8 +255,7 @@ def main():
 
 
 
-    # tello.takeoff()
-    cv2.imwrite("picture.png", frame_read.frame)
+    tello.takeoff()
 
     time.sleep(3)
 
