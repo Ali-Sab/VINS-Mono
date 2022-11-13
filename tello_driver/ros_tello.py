@@ -215,9 +215,9 @@ def main():
                 elif inputChar == 'x':
                     updownV = -70
                 elif inputChar == 'q':
-                    yawV = -20
+                    yawV = -30
                 elif inputChar == 'e':
-                    yawV = 20
+                    yawV = 30
                 elif inputChar == 'o':
                     speed += 10
                 elif inputChar == 'p':
